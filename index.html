@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="1С:Проф">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="description" content="Подготовка к аттестации 1С:Профессионал">
+  <meta name="format-detection" content="telephone=no">
+  <title>1С:Профессионал</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --bg-elevated: #111827;
+      --surface: #1a2332;
+      --surface-hover: #243044;
+      --border: rgba(148, 163, 184, 0.12);
+      --border-strong: rgba(148, 163, 184, 0.22);
+      --text: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --accent: #3b82f6;
+      --accent-2: #60a5fa;
+      --accent-soft: rgba(59, 130, 246, 0.14);
+      --success: #34d399;
+      --success-soft: rgba(52, 211, 153, 0.14);
+      --error: #f87171;
+      --error-soft: rgba(248, 113, 113, 0.14);
+      --warning: #fbbf24;
+      --radius: 16px;
+      --radius-sm: 12px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --nav-h: 56px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.25);
+      --spring: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    [data-theme="light"] {
+      --bg: #f1f5f9;
+      --bg-elevated: #ffffff;
+      --surface: #ffffff;
+      --surface-hover: #f8fafc;
+      --border: rgba(15, 23, 42, 0.08);
+      --border-strong: rgba(15, 23, 42, 0.14);
+      --text: #0f172a;
+      --text-secondary: #475569;
+      --text-tertiary: #94a3b8;
+      --accent-soft: rgba(59, 130, 246, 0.1);
+      --success-soft: rgba(16, 185, 129, 0.1);
+      --error-soft: rgba(239, 68, 68, 0.1);
+      --shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
+    .selectable, .q-text, .opt-text { -webkit-user-select: text; user-select: text; }
+    html, body {
+      height: 100%; background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none; overscroll-behavior: none;
+    }
+    body { display: flex; flex-direction: column; min-height: 100dvh; font-size: 16px; line-height: 1.4; }
+
+    .nav {
+      position: sticky; top: 0; z-index: 100; padding-top: var(--safe-top);
+      background: color-mix(in srgb, var(--bg-elevated) 78%, transparent);
+      backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner { height: var(--nav-h); display: flex; align-items: center; padding: 0 8px 0 4px; gap: 4px; }
+    .nav-title {
+      flex: 1; font-size: 17px; font-weight: 600; letter-spacing: -0.02em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; padding: 0 8px;
+    }
+    .nav-side { width: 44px; display: flex; justify-content: center; }
+    .nav-btn {
+      width: 40px; height: 40px; border: none; background: transparent; color: var(--accent);
+      font-size: 28px; font-weight: 300; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; cursor: pointer; line-height: 1;
+    }
+    .nav-btn:active { background: var(--border); }
+    .nav-btn.gear { font-size: 20px; color: var(--text-secondary); }
+
+    .screen { display: none; flex: 1; flex-direction: column; min-height: 0; animation: screenIn 0.28s var(--spring); }
+    .screen.active { display: flex; }
+    @keyframes screenIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+
+    .home { padding: 8px 16px 32px; padding-bottom: calc(32px + var(--safe-bottom)); }
+    .hero { text-align: center; padding: 28px 0 24px; }
+    .hero-badge {
+      width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 20px;
+      background: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -0.03em;
+      box-shadow: 0 12px 32px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .hero h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 6px; }
+    .hero p { font-size: 14px; color: var(--text-secondary); }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px; }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 14px 6px 12px; text-align: center;
+    }
+    .stat-value { font-size: 22px; font-weight: 700; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+    .stat-value.accent { color: var(--accent-2); }
+    .stat-value.success { color: var(--success); }
+    .stat-value.error { color: var(--error); }
+    .stat-label { font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+
+    .modes { display: flex; flex-direction: column; gap: 10px; }
+    .mode {
+      display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      color: var(--text); text-align: left; cursor: pointer;
+      transition: transform 0.2s var(--spring), background 0.15s; box-shadow: var(--shadow);
+    }
+    .mode:active { transform: scale(0.98); background: var(--surface-hover); }
+    .mode-icon {
+      width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center;
+      justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .mode-body { flex: 1; min-width: 0; }
+    .mode-title { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 3px; }
+    .mode-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.35; }
+    .mode-chevron { color: var(--text-tertiary); font-size: 20px; font-weight: 300; flex-shrink: 0; }
+
+    .mode-exam {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #1e40af 100%);
+      border: none; box-shadow: 0 8px 28px rgba(37, 99, 235, 0.35);
+    }
+    .mode-exam .mode-title, .mode-exam .mode-desc, .mode-exam .mode-chevron { color: #fff; }
+    .mode-exam .mode-desc { opacity: 0.85; }
+    .mode-exam .mode-icon { background: rgba(255,255,255,0.18); }
+    .mode-sections .mode-icon { background: var(--accent-soft); }
+    .mode-random .mode-icon { background: rgba(251, 191, 36, 0.15); }
+    .mode-review .mode-icon { background: var(--error-soft); }
+
+    .install-card {
+      margin-top: 24px; padding: 14px 16px; background: var(--surface);
+      border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+      font-size: 13px; color: var(--text-secondary); line-height: 1.5;
+    }
+    .install-card strong { color: var(--text); font-weight: 600; }
+
+    .section-list { padding: 12px 16px; padding-bottom: calc(28px + var(--safe-bottom)); }
+    .section-card {
+      display: flex; align-items: center; gap: 14px; padding: 14px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      margin-bottom: 8px; cursor: pointer; transition: transform 0.2s var(--spring); box-shadow: var(--shadow);
+    }
+    .section-card:active { transform: scale(0.98); }
+    .section-num {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(145deg, var(--accent), #1d4ed8); color: #fff;
+      font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    .section-info { flex: 1; min-width: 0; }
+    .section-name {
+      font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .section-meta { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+    .bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--success), #10b981); border-radius: 2px; transition: width 0.4s var(--spring); }
+
+    .quiz-meta {
+      display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
+      font-size: 13px; font-weight: 500; color: var(--text-secondary);
+      background: var(--bg-elevated); border-bottom: 1px solid var(--border);
+    }
+    .quiz-meta .score { color: var(--success); }
+    .quiz-meta .timer { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text); }
+    .quiz-meta .timer.warn { color: var(--warning); }
+    .quiz-meta .timer.danger { color: var(--error); }
+    .track { height: 3px; background: var(--border); }
+    .track > i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.35s var(--spring); }
+
+    .quiz-content {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 20px 16px; padding-bottom: calc(120px + var(--safe-bottom));
+    }
+    .chip {
+      display: inline-flex; align-items: center; font-size: 12px; font-weight: 500;
+      color: var(--accent-2); background: var(--accent-soft); padding: 4px 10px;
+      border-radius: 20px; margin-bottom: 14px; max-width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .q-text { font-size: 17px; font-weight: 500; line-height: 1.5; letter-spacing: -0.015em; margin-bottom: 22px; }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .opt {
+      display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 14px;
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+      color: var(--text); font-size: 15px; line-height: 1.4; text-align: left; cursor: pointer;
+      transition: all 0.18s ease; box-shadow: var(--shadow);
+    }
+    .opt:active:not(.locked) { transform: scale(0.985); }
+    .opt .mark {
+      width: 26px; height: 26px; border-radius: 50%; background: var(--border); color: var(--text-secondary);
+      font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px; transition: all 0.18s ease;
+    }
+    .opt .opt-text { flex: 1; padding-top: 3px; }
+    .opt.picked { border-color: var(--accent); background: var(--accent-soft); }
+    .opt.picked .mark { background: var(--accent); color: #fff; }
+    .opt.right { border-color: var(--success); background: var(--success-soft); }
+    .opt.right .mark { background: var(--success); color: #fff; }
+    .opt.wrong { border-color: var(--error); background: var(--error-soft); }
+    .opt.wrong .mark { background: var(--error); color: #fff; }
+    .opt.locked { pointer-events: none; }
+
+    .feedback {
+      margin-top: 18px; padding: 12px 14px; border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 600; text-align: center; animation: feedbackIn 0.3s var(--spring);
+    }
+    @keyframes feedbackIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .feedback.ok { color: var(--success); background: var(--success-soft); }
+    .feedback.fail { color: var(--error); background: var(--error-soft); }
+    .hint-swipe { text-align: center; margin-top: 24px; font-size: 12px; color: var(--text-tertiary); }
+
+    .dock {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+      padding: 12px 16px; padding-bottom: calc(12px + var(--safe-bottom));
+      background: color-mix(in srgb, var(--bg-elevated) 82%, transparent);
+      backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-top: 1px solid var(--border); display: flex; gap: 10px;
+    }
+    .btn {
+      flex: 1; height: 50px; border: none; border-radius: 14px; font-size: 16px; font-weight: 600;
+      letter-spacing: -0.01em; cursor: pointer; transition: transform 0.15s var(--spring), opacity 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-main { background: var(--accent); color: #fff; box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35); }
+    .btn-main:disabled { opacity: 0.35; transform: none; box-shadow: none; cursor: default; }
+    .btn-ghost { flex: 0 0 auto; min-width: 100px; background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+    .result { padding: 40px 20px 32px; text-align: center; padding-bottom: calc(40px + var(--safe-bottom)); }
+    .result-ring {
+      width: 120px; height: 120px; margin: 0 auto 20px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 48px;
+      animation: pop 0.5s var(--spring); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);
+    }
+    @keyframes pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .result-pct { font-size: 48px; font-weight: 800; letter-spacing: -0.05em; line-height: 1; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+    .result-pct.good { color: var(--success); }
+    .result-pct.mid { color: var(--warning); }
+    .result-pct.bad { color: var(--error); }
+    .result-sub { font-size: 15px; color: var(--text-secondary); margin-bottom: 32px; line-height: 1.5; }
+    .result-actions { display: flex; flex-direction: column; gap: 10px; max-width: 300px; margin: 0 auto; }
+    .result-actions .btn { flex: none; width: 100%; }
+
+    .mistakes { margin-top: 36px; text-align: left; max-width: 420px; margin-left: auto; margin-right: auto; }
+    .mistakes h3 {
+      font-size: 12px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 12px; padding: 0 4px;
+    }
+    .mistake { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; }
+    .mistake-q {
+      font-size: 14px; font-weight: 500; margin-bottom: 6px; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .mistake-a { font-size: 13px; color: var(--success); }
+
+    .settings { padding: 16px; padding-bottom: calc(32px + var(--safe-bottom)); }
+    .group {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow);
+    }
+    .row {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 14px 16px; min-height: 56px; border-bottom: 1px solid var(--border);
+    }
+    .row:last-child { border-bottom: none; }
+    .row-label { font-size: 16px; font-weight: 500; }
+    .row-hint { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+    .switch {
+      width: 51px; height: 31px; border-radius: 16px; background: var(--border-strong);
+      position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0;
+    }
+    .switch.on { background: var(--success); }
+    .switch::after {
+      content: ''; position: absolute; width: 27px; height: 27px; border-radius: 50%;
+      background: #fff; top: 2px; left: 2px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      transition: left 0.25s var(--spring);
+    }
+    .switch.on::after { left: 22px; }
+    .btn-danger {
+      width: 100%; height: 50px; border: none; border-radius: var(--radius);
+      background: var(--error-soft); color: var(--error); font-size: 16px; font-weight: 600; cursor: pointer;
+    }
+    .btn-danger:active { opacity: 0.75; }
+    .footer-note { text-align: center; padding: 28px 12px 8px; font-size: 12px; color: var(--text-tertiary); line-height: 1.6; }
+
+    .loading { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--text-secondary); }
+    .spinner {
+      width: 32px; height: 32px; border: 2.5px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast {
+      position: fixed; top: calc(var(--safe-top) + 64px); left: 50%;
+      transform: translateX(-50%) translateY(-8px); background: var(--surface); color: var(--text);
+      border: 1px solid var(--border); padding: 10px 18px; border-radius: 24px;
+      font-size: 14px; font-weight: 500; z-index: 400; opacity: 0; pointer-events: none;
+      transition: all 0.3s var(--spring); box-shadow: var(--shadow); white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="screen active" id="screen-loading">
+      <div class="loading"><div class="spinner"></div><div>Загрузка…</div></div>
+    </div>
+
+    <div class="screen" id="screen-home">
+      <div class="nav"><div class="nav-inner">
+        <div class="nav-side"></div>
+        <div class="nav-title">1С:Профессионал</div>
+        <div class="nav-side"><button class="nav-btn gear" onclick="showScreen('settings')" aria-label="Настройки">⚙</button></div>
+      </div></div>
+      <div class="scroll"><div class="home">
+        <div class="hero">
+          <div class="hero-badge">1С</div>
+          <h1>Тренажёр аттестации</h1>
+          <p>Платформа «1С:Предприятие 8.3»</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="stat-value accent" id="stat-total">—</div><div class="stat-label">вопросов</div></div>
+          <div class="stat"><div class="stat-value success" id="stat-studied">0</div><div class="stat-label">изучено</div></div>
+          <div class="stat"><div class="stat-value error" id="stat-wrong">0</div><div class="stat-label">ошибок</div></div>
+        </div>
+        <div class="modes">
+          <button class="mode mode-exam" onclick="startExam()">
+            <div class="mode-icon">📝</div>
+            <div class="mode-body"><div class="mode-title">Режим экзамена</div><div class="mode-desc">14 вопросов · по одному из раздела · 30 мин</div></div>
+            <div class="mode-chevron">›</div>
+          </button>
+          <button class="mode mode-sections" onclick="showScreen('sections')">
+            <div class="mode-icon">📚</div>
+            <div class="mode-body"><div class="mode-title">По разделам</div><div class="mode-desc">Изучать вопросы последовательно</div></div>
+            <div class="mode-chevron">›</div>
+          </button>
+          <button class="mode mode-random" onclick="startRandom()">
+            <div class="mode-icon">🎲</div>
+            <div class="mode-body"><div class="mode-title">Случайные</div><div class="mode-desc">20 вопросов из всей базы</div></div>
+            <div class="mode-chevron">›</div>
+          </button>
+          <button class="mode mode-review" id="btn-review" onclick="startReview()" style="display:none">
+            <div class="mode-icon">🔄</div>
+            <div class="mode-body"><div class="mode-title">Разобрать ошибки</div><div class="mode-desc" id="review-desc">0 вопросов</div></div>
+            <div class="mode-chevron">›</div>
+          </button>
+        </div>
+        <div class="install-card" id="install-tip"><strong>На iPhone:</strong> Safari → Поделиться → «На экран „Домой“»</div>
+      </div></div>
+    </div>
+
+    <div class="screen" id="screen-sections">
+      <div class="nav"><div class="nav-inner">
+        <div class="nav-side"><button class="nav-btn" onclick="showScreen('home')" aria-label="Назад">‹</button></div>
+        <div class="nav-title">Разделы</div>
+        <div class="nav-side"></div>
+      </div></div>
+      <div class="scroll"><div class="section-list" id="section-list"></div></div>
+    </div>
+
+    <div class="screen" id="screen-quiz">
+      <div class="nav"><div class="nav-inner">
+        <div class="nav-side"><button class="nav-btn" onclick="confirmExitQuiz()" aria-label="Выйти">‹</button></div>
+        <div class="nav-title" id="quiz-title">Вопрос</div>
+        <div class="nav-side"></div>
+      </div></div>
+      <div class="quiz-meta">
+        <span id="quiz-progress">1 / 10</span>
+        <span class="score"><span id="quiz-score">0</span> верно</span>
+        <span class="timer" id="quiz-timer" style="display:none">30:00</span>
+      </div>
+      <div class="track"><i id="quiz-bar" style="width:0%"></i></div>
+      <div class="quiz-content" id="quiz-body">
+        <div class="chip" id="q-section" style="display:none"></div>
+        <div class="q-text selectable" id="question-text"></div>
+        <div class="options" id="options"></div>
+        <div id="answer-feedback"></div>
+        <div class="hint-swipe" id="swipe-hint">свайп влево — далее</div>
+      </div>
+      <div class="dock">
+        <button class="btn btn-ghost" id="btn-skip" onclick="skipQuestion()">Пропуск</button>
+        <button class="btn btn-main" id="btn-next" onclick="nextQuestion()" disabled>Далее</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-result">
+      <div class="nav"><div class="nav-inner">
+        <div class="nav-side"><button class="nav-btn" onclick="showScreen('home')" aria-label="На главную">‹</button></div>
+        <div class="nav-title">Результат</div>
+        <div class="nav-side"></div>
+      </div></div>
+      <div class="scroll"><div class="result">
+        <div class="result-ring" id="result-emoji">🎉</div>
+        <div class="result-pct" id="result-score">0%</div>
+        <div class="result-sub" id="result-details"></div>
+        <div class="result-actions">
+          <button class="btn btn-main" onclick="retryCurrent()">Пройти ещё раз</button>
+          <button class="btn btn-ghost" style="width:100%" onclick="showScreen('home')">На главную</button>
+        </div>
+        <div class="mistakes" id="wrong-list" style="display:none"></div>
+      </div></div>
+    </div>
+
+    <div class="screen" id="screen-settings">
+      <div class="nav"><div class="nav-inner">
+        <div class="nav-side"><button class="nav-btn" onclick="showScreen('home')" aria-label="Назад">‹</button></div>
+        <div class="nav-title">Настройки</div>
+        <div class="nav-side"></div>
+      </div></div>
+      <div class="scroll"><div class="settings">
+        <div class="group">
+          <div class="row">
+            <div><div class="row-label">Показывать ответ сразу</div><div class="row-hint">После выбора варианта</div></div>
+            <div class="switch on" id="toggle-showAnswer" onclick="toggleSetting('showAnswer')"></div>
+          </div>
+          <div class="row">
+            <div><div class="row-label">Перемешивать варианты</div><div class="row-hint">Случайный порядок ответов</div></div>
+            <div class="switch on" id="toggle-shuffle" onclick="toggleSetting('shuffle')"></div>
+          </div>
+          <div class="row">
+            <div><div class="row-label">Вибрация</div><div class="row-hint">Отклик при ответе</div></div>
+            <div class="switch on" id="toggle-haptic" onclick="toggleSetting('haptic')"></div>
+          </div>
+          <div class="row">
+            <div><div class="row-label">Светлая тема</div></div>
+            <div class="switch" id="toggle-light" onclick="toggleSetting('light')"></div>
+          </div>
+        </div>
+        <button class="btn-danger" onclick="resetProgress()">Сбросить прогресс</button>
+        <div class="footer-note">1С:Профессионал · платформа 8.3<br>961 вопрос · 14 разделов · офлайн</div>
+      </div></div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script>
+    let DATA=[], settings={showAnswer:true,shuffle:true,haptic:true,light:false}, progress={}, wrongSet={};
+    let quiz={mode:null,sectionId:null,questions:[],current:0,answers:[],score:0,timerId:null,timeLeft:0};
+    let touchStartX=0, touchStartY=0;
+
+    async function init(){
+      try{
+        const res=await fetch('questions.json'); DATA=await res.json();
+        loadSettings(); loadProgress(); applyTheme(); updateHomeStats(); renderSections();
+        hideInstallTipIfStandalone(); showScreen('home');
+      }catch(e){
+        document.querySelector('#screen-loading .loading').innerHTML=
+          '<div style="color:var(--error)">Ошибка загрузки</div><div style="font-size:13px;margin-top:8px">'+e.message+'</div>';
+      }
+    }
+    function loadSettings(){try{const s=JSON.parse(localStorage.getItem('1c_settings_v2')||'{}');settings={...settings,...s}}catch{}syncToggles()}
+    function saveSettings(){localStorage.setItem('1c_settings_v2',JSON.stringify(settings))}
+    function syncToggles(){['showAnswer','shuffle','haptic','light'].forEach(k=>{const el=document.getElementById('toggle-'+k);if(el)el.classList.toggle('on',settings[k])})}
+    function applyTheme(){
+      document.documentElement.setAttribute('data-theme',settings.light?'light':'dark');
+      document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{m.content=settings.light?'#f1f5f9':'#0b1220'});
+    }
+    function loadProgress(){
+      try{const p=JSON.parse(localStorage.getItem('1c_progress_v2')||'{}');progress={};for(const[k,v] of Object.entries(p.studied||{}))progress[k]=new Set(v);wrongSet={};for(const[k,v] of Object.entries(p.wrong||{}))wrongSet[k]=new Set(v)}catch{progress={};wrongSet={}}
+    }
+    function saveProgress(){
+      const studied={},wrong={};for(const[k,v] of Object.entries(progress))studied[k]=[...v];for(const[k,v] of Object.entries(wrongSet))wrong[k]=[...v];
+      localStorage.setItem('1c_progress_v2',JSON.stringify({studied,wrong}));
+    }
+    function updateHomeStats(){
+      let studied=0,wrong=0;for(const s of DATA){studied+=(progress[s.id]||new Set()).size;wrong+=(wrongSet[s.id]||new Set()).size}
+      document.getElementById('stat-total').textContent=DATA.reduce((a,s)=>a+s.questions.length,0);
+      document.getElementById('stat-studied').textContent=studied;
+      document.getElementById('stat-wrong').textContent=wrong;
+      const btn=document.getElementById('btn-review');
+      if(wrong>0){btn.style.display='flex';document.getElementById('review-desc').textContent=wrong+' вопрос'+plural(wrong)}else btn.style.display='none';
+    }
+    function plural(n){const m=n%10,m2=n%100;if(m===1&&m2!==11)return'';if(m>=2&&m<=4&&(m2<12||m2>14))return'а';return'ов'}
+    function renderSections(){
+      document.getElementById('section-list').innerHTML=DATA.map(s=>{
+        const studied=(progress[s.id]||new Set()).size,total=s.questions.length,pct=total?Math.round(studied/total*100):0;
+        const name=s.title.replace(/^\d+\./,'').trim();
+        return`<div class="section-card" onclick="startSection('${s.id}')"><div class="section-num">${s.id}</div><div class="section-info"><div class="section-name">${name}</div><div class="section-meta">${total} вопр. · ${studied} изучено · ${pct}%</div><div class="bar"><i style="width:${pct}%"></i></div></div></div>`;
+      }).join('');
+    }
+    function showScreen(id){
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      document.getElementById('screen-'+id).classList.add('active');
+      if(id==='home')updateHomeStats();if(id==='sections')renderSections();
+    }
+    function toggleSetting(key){settings[key]=!settings[key];syncToggles();saveSettings();if(key==='light')applyTheme();haptic(10)}
+    function resetProgress(){if(!confirm('Сбросить весь прогресс и список ошибок?'))return;progress={};wrongSet={};saveProgress();updateHomeStats();renderSections();toast('Прогресс сброшен');haptic(30)}
+    function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200)}
+    function haptic(ms=15){if(settings.haptic&&navigator.vibrate)navigator.vibrate(ms)}
+    function hideInstallTipIfStandalone(){
+      const standalone=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
+      if(standalone){const tip=document.getElementById('install-tip');if(tip)tip.style.display='none'}
+    }
+    function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+    function startSection(sectionId){
+      const sec=DATA.find(s=>s.id===sectionId);if(!sec)return;stopTimer();
+      quiz={mode:'section',sectionId,questions:sec.questions.map((q,i)=>({...q,_sectionId:sectionId,_idx:i})),current:0,answers:[],score:0,timerId:null,timeLeft:0};
+      document.getElementById('quiz-title').textContent=sec.title.replace(/^\d+\./,'').trim().slice(0,26);
+      document.getElementById('quiz-timer').style.display='none';showQuestion();showScreen('quiz');
+    }
+    function startExam(){
+      stopTimer();
+      const questions=DATA.map(sec=>{const idx=Math.floor(Math.random()*sec.questions.length);return{...sec.questions[idx],_sectionId:sec.id,_idx:idx}});
+      quiz={mode:'exam',sectionId:null,questions:shuffle(questions),current:0,answers:[],score:0,timerId:null,timeLeft:30*60};
+      document.getElementById('quiz-title').textContent='Экзамен';document.getElementById('quiz-timer').style.display='inline';
+      startTimer();showQuestion();showScreen('quiz');
+    }
+    function startRandom(){
+      stopTimer();const all=[];DATA.forEach(sec=>{sec.questions.forEach((q,i)=>all.push({...q,_sectionId:sec.id,_idx:i}))});
+      quiz={mode:'random',sectionId:null,questions:shuffle(all).slice(0,20),current:0,answers:[],score:0,timerId:null,timeLeft:0};
+      document.getElementById('quiz-title').textContent='Случайные';document.getElementById('quiz-timer').style.display='none';
+      showQuestion();showScreen('quiz');
+    }
+    function startReview(){
+      stopTimer();const list=[];
+      for(const sec of DATA){const set=wrongSet[sec.id];if(!set)continue;for(const idx of set){if(sec.questions[idx])list.push({...sec.questions[idx],_sectionId:sec.id,_idx:idx})}}
+      if(!list.length){toast('Нет ошибок для разбора');return}
+      quiz={mode:'review',sectionId:null,questions:shuffle(list),current:0,answers:[],score:0,timerId:null,timeLeft:0};
+      document.getElementById('quiz-title').textContent='Ошибки';document.getElementById('quiz-timer').style.display='none';
+      showQuestion();showScreen('quiz');
+    }
+    function startTimer(){
+      updateTimerDisplay();
+      quiz.timerId=setInterval(()=>{quiz.timeLeft--;updateTimerDisplay();if(quiz.timeLeft<=0){stopTimer();toast('Время вышло');haptic([40,30,40]);showResult()}},1000);
+    }
+    function stopTimer(){if(quiz.timerId){clearInterval(quiz.timerId);quiz.timerId=null}}
+    function updateTimerDisplay(){
+      const el=document.getElementById('quiz-timer'),m=Math.floor(quiz.timeLeft/60),s=quiz.timeLeft%60;
+      el.textContent=m+':'+s.toString().padStart(2,'0');
+      el.classList.toggle('warn',quiz.timeLeft<=300&&quiz.timeLeft>60);
+      el.classList.toggle('danger',quiz.timeLeft<=60);
+    }
+    function showQuestion(){
+      const q=quiz.questions[quiz.current],total=quiz.questions.length,pct=(quiz.current/total)*100;
+      document.getElementById('quiz-progress').textContent=(quiz.current+1)+' / '+total;
+      document.getElementById('quiz-score').textContent=quiz.score;
+      document.getElementById('quiz-bar').style.width=pct+'%';
+      document.getElementById('question-text').textContent=q.text;
+      document.getElementById('answer-feedback').innerHTML='';
+      const badge=document.getElementById('q-section');
+      if(quiz.mode!=='section'){const sec=DATA.find(s=>s.id===q._sectionId);badge.style.display='inline-flex';badge.textContent=sec?sec.title.replace(/^\d+\./,'').trim().slice(0,42):q._sectionId}
+      else badge.style.display='none';
+      let opts=q.options.map((text,i)=>({text,orig:i}));if(settings.shuffle)opts=shuffle(opts);
+      const letters='АБВГДЕЖЗИК';
+      document.getElementById('options').innerHTML=opts.map((o,i)=>
+        `<button class="opt" data-orig="${o.orig}" onclick="selectOption(this,${o.orig})"><span class="mark">${letters[i]||(i+1)}</span><span class="opt-text">${o.text}</span></button>`
+      ).join('');
+      document.getElementById('btn-next').disabled=true;
+      document.getElementById('btn-next').textContent=quiz.current===total-1?'Завершить':'Далее';
+      document.getElementById('btn-skip').style.display=(quiz.mode==='exam'||quiz.mode==='review')?'none':'block';
+      document.getElementById('swipe-hint').style.display=quiz.current<total-1?'block':'none';
+      document.getElementById('quiz-body').scrollTop=0;
+    }
+    function selectOption(el,origIndex){
+      if(el.classList.contains('locked'))return;
+      const q=quiz.questions[quiz.current],isCorrect=origIndex===q.correct;
+      document.querySelectorAll('.opt').forEach(o=>{o.classList.add('locked');o.classList.remove('picked','right','wrong')});
+      el.classList.add('picked');
+      const show=settings.showAnswer||quiz.mode==='exam'||quiz.mode==='review';
+      if(show){
+        document.querySelectorAll('.opt').forEach(o=>{const oi=parseInt(o.dataset.orig);if(oi===q.correct)o.classList.add('right');else if(oi===origIndex&&!isCorrect)o.classList.add('wrong')});
+        const fb=document.getElementById('answer-feedback');
+        if(isCorrect){fb.innerHTML='<div class="feedback ok">Верно</div>';haptic(12)}
+        else{fb.innerHTML='<div class="feedback fail">Неверно</div>';haptic([25,40,25])}
+      }else haptic(10);
+      quiz.answers[quiz.current]={selected:origIndex,correct:isCorrect};
+      if(isCorrect){quiz.score++;if(wrongSet[q._sectionId]){wrongSet[q._sectionId].delete(q._idx);if(!wrongSet[q._sectionId].size)delete wrongSet[q._sectionId]}}
+      else{if(!wrongSet[q._sectionId])wrongSet[q._sectionId]=new Set();wrongSet[q._sectionId].add(q._idx)}
+      if(!progress[q._sectionId])progress[q._sectionId]=new Set();progress[q._sectionId].add(q._idx);saveProgress();
+      document.getElementById('btn-next').disabled=false;document.getElementById('quiz-score').textContent=quiz.score;
+    }
+    function nextQuestion(){if(quiz.current<quiz.questions.length-1){quiz.current++;showQuestion();haptic(8)}else{stopTimer();showResult()}}
+    function skipQuestion(){quiz.answers[quiz.current]={selected:-1,correct:false};nextQuestion()}
+    function showResult(){
+      stopTimer();const total=quiz.questions.length,pct=total?Math.round(quiz.score/total*100):0;
+      const scoreEl=document.getElementById('result-score');scoreEl.textContent=pct+'%';
+      scoreEl.className='result-pct '+(pct>=80?'good':pct>=50?'mid':'bad');
+      document.getElementById('result-emoji').textContent=pct>=90?'🏆':pct>=70?'🎉':pct>=50?'👍':'📚';
+      const names={exam:'Экзамен',section:'Раздел',random:'Случайные',review:'Ошибки'};
+      let timeStr='';if(quiz.mode==='exam'){const used=30*60-Math.max(0,quiz.timeLeft);timeStr='<br>Время: '+Math.floor(used/60)+':'+(used%60).toString().padStart(2,'0')}
+      document.getElementById('result-details').innerHTML=quiz.score+' из '+total+' правильных · '+(names[quiz.mode]||'')+timeStr;
+      const wrongs=[];quiz.questions.forEach((q,i)=>{const a=quiz.answers[i];if(a&&!a.correct)wrongs.push(q)});
+      const wl=document.getElementById('wrong-list');
+      if(wrongs.length){wl.style.display='block';wl.innerHTML='<h3>Ошибки · '+wrongs.length+'</h3>'+wrongs.map(q=>`<div class="mistake"><div class="mistake-q">${q.text}</div><div class="mistake-a">✓ ${q.options[q.correct]}</div></div>`).join('')}
+      else wl.style.display='none';
+      updateHomeStats();showScreen('result');haptic(pct>=70?[20,30,20]:40);
+    }
+    function retryCurrent(){
+      if(quiz.mode==='exam')startExam();else if(quiz.mode==='random')startRandom();
+      else if(quiz.mode==='review')startReview();else if(quiz.sectionId)startSection(quiz.sectionId);else showScreen('home');
+    }
+    function confirmExitQuiz(){if(quiz.current>0&&!confirm('Выйти? Текущий результат не сохранится.'))return;stopTimer();showScreen('home')}
+    document.getElementById('quiz-body').addEventListener('touchstart',e=>{touchStartX=e.changedTouches[0].screenX;touchStartY=e.changedTouches[0].screenY},{passive:true});
+    document.getElementById('quiz-body').addEventListener('touchend',e=>{
+      const dx=e.changedTouches[0].screenX-touchStartX,dy=e.changedTouches[0].screenY-touchStartY;
+      if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx))return;
+      if(dx<-60&&!document.getElementById('btn-next').disabled)nextQuestion();
+    },{passive:true});
+    if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+    init();
+  </script>
+</body>
+</html>
