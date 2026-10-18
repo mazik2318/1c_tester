@@ -199,7 +199,7 @@
       color: var(--text); font-size: 15px; line-height: 1.4; text-align: left; cursor: pointer;
       transition: all 0.18s ease; box-shadow: var(--shadow);
     }
-    .opt:active:not(.locked) { transform: scale(0.985); }
+    .opt:active { transform: scale(0.985); }
     .opt .mark {
       width: 26px; height: 26px; border-radius: 50%; background: var(--border); color: var(--text-secondary);
       font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
@@ -212,8 +212,7 @@
     .opt.right .mark { background: var(--success); color: #fff; }
     .opt.wrong { border-color: var(--error); background: var(--error-soft); }
     .opt.wrong .mark { background: var(--error); color: #fff; }
-    .opt.locked { pointer-events: none; }
-
+    
     .feedback {
       margin-top: 18px; padding: 12px 14px; border-radius: var(--radius-sm);
       font-size: 15px; font-weight: 600; text-align: center; animation: feedbackIn 0.3s var(--spring);
@@ -391,6 +390,7 @@
         <div class="hint-swipe" id="swipe-hint">свайп влево — далее</div>
       </div>
       <div class="dock">
+        <button class="btn btn-ghost" id="btn-prev" onclick="prevQuestion()" disabled>Назад</button>
         <button class="btn btn-ghost" id="btn-skip" onclick="skipQuestion()">Пропуск</button>
         <button class="btn btn-main" id="btn-next" onclick="nextQuestion()" disabled>Далее</button>
       </div>
@@ -558,16 +558,35 @@
       document.getElementById('options').innerHTML=opts.map((o,i)=>
         `<button class="opt" data-orig="${o.orig}" onclick="selectOption(this,${o.orig})"><span class="mark">${letters[i]||(i+1)}</span><span class="opt-text">${o.text}</span></button>`
       ).join('');
-      document.getElementById('btn-next').disabled=true;
+      
+      const prevAns=quiz.answers[quiz.current];
+      if(prevAns&&prevAns.selected>=0){
+        const pel=document.querySelector('.opt[data-orig="'+prevAns.selected+'"]');
+        if(pel){
+          document.querySelectorAll('.opt').forEach(o=>o.classList.remove('picked','right','wrong'));
+          pel.classList.add('picked');
+          const show=settings.showAnswer||quiz.mode==='exam'||quiz.mode==='review';
+          if(show){
+            document.querySelectorAll('.opt').forEach(o=>{const oi=parseInt(o.dataset.orig);if(oi===q.correct)o.classList.add('right');else if(oi===prevAns.selected&&!prevAns.correct)o.classList.add('wrong')});
+            const fb=document.getElementById('answer-feedback');
+            fb.innerHTML=prevAns.correct?'<div class="feedback ok">Верно</div>':'<div class="feedback fail">Неверно</div>';
+          }
+        }
+      }
+      const answered=!!(prevAns&&prevAns.selected>=0);
+      document.getElementById('btn-next').disabled=!answered;
+      document.getElementById('btn-prev').disabled=quiz.current<=0;
+      document.getElementById('btn-prev').style.display=quiz.mode==='exam'?'none':'block';
+      // was: document.getElementById('btn-next').disabled=true;
+
       document.getElementById('btn-next').textContent=quiz.current===total-1?'Завершить':'Далее';
       document.getElementById('btn-skip').style.display=(quiz.mode==='exam'||quiz.mode==='review')?'none':'block';
       document.getElementById('swipe-hint').style.display=quiz.current<total-1?'block':'none';
       document.getElementById('quiz-body').scrollTop=0;
     }
     function selectOption(el,origIndex){
-      if(el.classList.contains('locked'))return;
       const q=quiz.questions[quiz.current],isCorrect=origIndex===q.correct;
-      document.querySelectorAll('.opt').forEach(o=>{o.classList.add('locked');o.classList.remove('picked','right','wrong')});
+      document.querySelectorAll('.opt').forEach(o=>{o.classList.remove('picked','right','wrong')});
       el.classList.add('picked');
       const show=settings.showAnswer||quiz.mode==='exam'||quiz.mode==='review';
       if(show){
@@ -577,10 +596,18 @@
         else{fb.innerHTML='<div class="feedback fail">Неверно</div>';haptic([25,40,25])}
       }else haptic(10);
       quiz.answers[quiz.current]={selected:origIndex,correct:isCorrect};
-      if(isCorrect){quiz.score++;if(wrongSet[q._sectionId]){wrongSet[q._sectionId].delete(q._idx);if(!wrongSet[q._sectionId].size)delete wrongSet[q._sectionId]}}
+      if(isCorrect){if(wrongSet[q._sectionId]){wrongSet[q._sectionId].delete(q._idx);if(!wrongSet[q._sectionId].size)delete wrongSet[q._sectionId]}}
       else{if(!wrongSet[q._sectionId])wrongSet[q._sectionId]=new Set();wrongSet[q._sectionId].add(q._idx)}
       if(!progress[q._sectionId])progress[q._sectionId]=new Set();progress[q._sectionId].add(q._idx);saveProgress();
-      document.getElementById('btn-next').disabled=false;document.getElementById('quiz-score').textContent=quiz.score;
+      quiz.score=quiz.answers.filter(a=>a&&a.correct).length;
+      document.getElementById('quiz-score').textContent=quiz.score;
+      document.getElementById('btn-next').disabled=false;
+    }
+    function prevQuestion(){
+      if(quiz.current<=0)return;
+      quiz.current--;
+      showQuestion();
+      haptic(8);
     }
     function nextQuestion(){if(quiz.current<quiz.questions.length-1){quiz.current++;showQuestion();haptic(8)}else{stopTimer();showResult()}}
     function skipQuestion(){quiz.answers[quiz.current]={selected:-1,correct:false};nextQuestion()}
@@ -607,7 +634,7 @@
     document.getElementById('quiz-body').addEventListener('touchend',e=>{
       const dx=e.changedTouches[0].screenX-touchStartX,dy=e.changedTouches[0].screenY-touchStartY;
       if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx))return;
-      if(dx<-60&&!document.getElementById('btn-next').disabled)nextQuestion();
+      if(dx<-60&&!document.getElementById('btn-next').disabled)nextQuestion();if(dx>60&&quiz.current>0&&quiz.mode!=='exam')prevQuestion();
     },{passive:true});
     if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
     init();
