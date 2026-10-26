@@ -446,7 +446,7 @@
   </div>
   <div class="toast" id="toast"></div>
   <script>
-    let DATA=[], settings={showAnswer:true,shuffle:true,haptic:true,light:false}, progress={}, wrongSet={};
+    let DATA=[], settings={showAnswer:true,shuffle:true,haptic:true,light:false}, progress={}, wrongSet={}, lastPos={};
     let quiz={mode:null,sectionId:null,questions:[],current:0,answers:[],score:0,timerId:null,timeLeft:0};
     let touchStartX=0, touchStartY=0;
 
@@ -468,11 +468,11 @@
       document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{m.content=settings.light?'#f1f5f9':'#0b1220'});
     }
     function loadProgress(){
-      try{const p=JSON.parse(localStorage.getItem('1c_progress_v2')||'{}');progress={};for(const[k,v] of Object.entries(p.studied||{}))progress[k]=new Set(v);wrongSet={};for(const[k,v] of Object.entries(p.wrong||{}))wrongSet[k]=new Set(v)}catch{progress={};wrongSet={}}
+      try{const p=JSON.parse(localStorage.getItem('1c_progress_v2')||'{}');progress={};for(const[k,v] of Object.entries(p.studied||{}))progress[k]=new Set(v);wrongSet={};for(const[k,v] of Object.entries(p.wrong||{}))wrongSet[k]=new Set(v);lastPos=p.lastPos||{}}catch{progress={};wrongSet={};lastPos={}}
     }
     function saveProgress(){
       const studied={},wrong={};for(const[k,v] of Object.entries(progress))studied[k]=[...v];for(const[k,v] of Object.entries(wrongSet))wrong[k]=[...v];
-      localStorage.setItem('1c_progress_v2',JSON.stringify({studied,wrong}));
+      localStorage.setItem('1c_progress_v2',JSON.stringify({studied,wrong,lastPos}));
     }
     function updateHomeStats(){
       let studied=0,wrong=0;for(const s of DATA){studied+=(progress[s.id]||new Set()).size;wrong+=(wrongSet[s.id]||new Set()).size}
@@ -487,7 +487,7 @@
       document.getElementById('section-list').innerHTML=DATA.map(s=>{
         const studied=(progress[s.id]||new Set()).size,total=s.questions.length,pct=total?Math.round(studied/total*100):0;
         const name=s.title.replace(/^\d+\./,'').trim();
-        return`<div class="section-card" onclick="startSection('${s.id}')"><div class="section-num">${s.id}</div><div class="section-info"><div class="section-name">${name}</div><div class="section-meta">${total} вопр. · ${studied} изучено · ${pct}%</div><div class="bar"><i style="width:${pct}%"></i></div></div></div>`;
+        return`<div class="section-card" onclick="startSection('${s.id}')"><div class="section-num">${s.id}</div><div class="section-info"><div class="section-name">${name}</div><div class="section-meta">${total} вопр. · ${studied} изучено · ${pct}%${(lastPos[s.id]>0)?(' · с '+(lastPos[s.id]+1)+' вопр.'):''}</div><div class="bar"><i style="width:${pct}%"></i></div></div></div>`;
       }).join('');
     }
     function showScreen(id){
@@ -496,7 +496,7 @@
       if(id==='home')updateHomeStats();if(id==='sections')renderSections();
     }
     function toggleSetting(key){settings[key]=!settings[key];syncToggles();saveSettings();if(key==='light')applyTheme();haptic(10)}
-    function resetProgress(){if(!confirm('Сбросить весь прогресс и список ошибок?'))return;progress={};wrongSet={};saveProgress();updateHomeStats();renderSections();toast('Прогресс сброшен');haptic(30)}
+    function resetProgress(){if(!confirm('Сбросить весь прогресс и список ошибок?'))return;progress={};wrongSet={};lastPos={};saveProgress();updateHomeStats();renderSections();toast('Прогресс сброшен');haptic(30)}
     function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200)}
     function haptic(ms=15){if(settings.haptic&&navigator.vibrate)navigator.vibrate(ms)}
     function hideInstallTipIfStandalone(){
@@ -507,9 +507,13 @@
 
     function startSection(sectionId){
       const sec=DATA.find(s=>s.id===sectionId);if(!sec)return;stopTimer();
-      quiz={mode:'section',sectionId,questions:sec.questions.map((q,i)=>({...q,_sectionId:sectionId,_idx:i})),current:0,answers:[],score:0,timerId:null,timeLeft:0};
+      let startIdx=parseInt(lastPos[sectionId]||0,10)||0;
+      if(startIdx<0||startIdx>=sec.questions.length)startIdx=0;
+      quiz={mode:'section',sectionId,questions:sec.questions.map((q,i)=>({...q,_sectionId:sectionId,_idx:i})),current:startIdx,answers:[],score:0,timerId:null,timeLeft:0};
       document.getElementById('quiz-title').textContent=sec.title.replace(/^\d+\./,'').trim().slice(0,26);
-      document.getElementById('quiz-timer').style.display='none';showQuestion();showScreen('quiz');
+      document.getElementById('quiz-timer').style.display='none';
+      if(startIdx>0)toast('Продолжаем с вопроса '+(startIdx+1));
+      showQuestion();showScreen('quiz');
     }
     function startExam(){
       stopTimer();
@@ -598,7 +602,7 @@
       quiz.answers[quiz.current]={selected:origIndex,correct:isCorrect};
       if(isCorrect){if(wrongSet[q._sectionId]){wrongSet[q._sectionId].delete(q._idx);if(!wrongSet[q._sectionId].size)delete wrongSet[q._sectionId]}}
       else{if(!wrongSet[q._sectionId])wrongSet[q._sectionId]=new Set();wrongSet[q._sectionId].add(q._idx)}
-      if(!progress[q._sectionId])progress[q._sectionId]=new Set();progress[q._sectionId].add(q._idx);saveProgress();
+      if(!progress[q._sectionId])progress[q._sectionId]=new Set();progress[q._sectionId].add(q._idx);if(quiz.mode==='section'&&quiz.sectionId){lastPos[quiz.sectionId]=quiz.current}saveProgress();
       quiz.score=quiz.answers.filter(a=>a&&a.correct).length;
       document.getElementById('quiz-score').textContent=quiz.score;
       document.getElementById('btn-next').disabled=false;
@@ -606,10 +610,11 @@
     function prevQuestion(){
       if(quiz.current<=0)return;
       quiz.current--;
+      if(quiz.mode==='section'&&quiz.sectionId){lastPos[quiz.sectionId]=quiz.current;saveProgress()}
       showQuestion();
       haptic(8);
     }
-    function nextQuestion(){if(quiz.current<quiz.questions.length-1){quiz.current++;showQuestion();haptic(8)}else{stopTimer();showResult()}}
+    function nextQuestion(){if(quiz.mode==='section'&&quiz.sectionId){lastPos[quiz.sectionId]=quiz.current;saveProgress()}if(quiz.current<quiz.questions.length-1){quiz.current++;if(quiz.mode==='section'&&quiz.sectionId){lastPos[quiz.sectionId]=quiz.current;saveProgress()}showQuestion();haptic(8)}else{if(quiz.mode==='section'&&quiz.sectionId){lastPos[quiz.sectionId]=0;saveProgress()}stopTimer();showResult()}}
     function skipQuestion(){quiz.answers[quiz.current]={selected:-1,correct:false};nextQuestion()}
     function showResult(){
       stopTimer();const total=quiz.questions.length,pct=total?Math.round(quiz.score/total*100):0;
@@ -629,7 +634,7 @@
       if(quiz.mode==='exam')startExam();else if(quiz.mode==='random')startRandom();
       else if(quiz.mode==='review')startReview();else if(quiz.sectionId)startSection(quiz.sectionId);else showScreen('home');
     }
-    function confirmExitQuiz(){if(quiz.current>0&&!confirm('Выйти? Текущий результат не сохранится.'))return;stopTimer();showScreen('home')}
+    function confirmExitQuiz(){if(quiz.mode==='section'&&quiz.sectionId){lastPos[quiz.sectionId]=quiz.current;saveProgress()}if(quiz.mode!=='section'&&quiz.current>0&&!confirm('Выйти? Текущий результат не сохранится.'))return;stopTimer();showScreen('home')}
     document.getElementById('quiz-body').addEventListener('touchstart',e=>{touchStartX=e.changedTouches[0].screenX;touchStartY=e.changedTouches[0].screenY},{passive:true});
     document.getElementById('quiz-body').addEventListener('touchend',e=>{
       const dx=e.changedTouches[0].screenX-touchStartX,dy=e.changedTouches[0].screenY-touchStartY;
